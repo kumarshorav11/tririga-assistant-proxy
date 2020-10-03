@@ -1,7 +1,7 @@
 var express = require('express');
 var app = express();
 
-app.use(express.json);
+app.use(express.json());
 
 // This responds with "Hello World" on the homepage
 app.get('/', function (req, res) {
