@@ -1,41 +1,128 @@
-var express = require('express');
-var app = express();
+const express = require('express');
+const AssistantV2 = require('ibm-watson/assistant/v2');
+const { IamAuthenticator } = require('ibm-watson/auth');
 
+const WA_URL = process.env("WA_URL");
+const WA_VERSION = process.env("WA_VERSION");
+const WA_API_KEY = process.env("WA_API_KEY");
+const ASSISTANT_INFO = process.env("ASSISTANT_INFO");
+const DEBUG = process.env("DEBUG");
+
+if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
+    console.error("Missing environment variable.  WA_URL, WA_VERSION, WA_API_KEY, and ASSISTANT_INFO are required.");
+    initError = true;
+}
+
+let assistant = undefined;
+let initError = false;
+let sessionId = "";
+let assistantId = "";
+let assistantInfo = {};
+
+try {
+    assistantInfo = JSON.parse(process.env.ASSISTANT_INFO);
+} catch (e) {
+    console.error("ASSISTANT_INFO value missing data.  Should be a JSON object.")
+    initError = true;
+}
+
+if (!assistantInfo.wa_assistant_id) {
+    console.error("ASSISTANT_INFO value missing data.  Should be a JSON object with 'wa_assistant_id' key.")
+    initError = true;
+}
+
+function getSession(sessionId, assistant, assistantId) {
+    return new Promise((resolve, reject) => {
+        try {
+            if (sessionId.trim().length > 0) {
+                return resolve(sessionId);
+            } else {
+                return assistant.createSession({ assistantId: assistantId }).then(function (res) {
+                    try {
+                        let newSessionId = res.result.session_id;
+                        return resolve(newSessionId);
+                    } catch (e) {
+                        console.error(e);
+                        return resolve({ error_code: "unable-to-create-wa-session" });
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("No sessionID was provided in params");
+            console.error(e);
+            return resolve({ error_code: "unable-to-resolve-sessionId" });
+        }
+    });
+}
+
+function handlePost(req, res) {
+    return getSession(req.body.session_id, assistant, assistantId).then((result) => {
+        if (result.error_code) {
+            return result;
+        }
+        sessionId = result;
+        let payload = req.body.wa_payload;
+        payload.sessionId = sessionId;
+        payload.assistantId = assistantId;
+        return assistant.message(payload);
+    }).then((result) => {
+        result.sessionId = sessionId;
+        res.json({ result: result });
+    }).catch(err => {
+        if (err.body) {
+            try {
+                let body = JSON.parse(err.body);
+                if (body.error === "Invalid Session") {
+                    console.log("Session timed out due to inactivity. Returning error to caller.");
+                    return err;
+                }
+            } catch (e) {
+                console.log("Error body existed, but wasn't valid JSON.");
+            }
+        }
+        console.log("Proxy got unknown error from WA.");
+        console.log(err);
+        res.json({error_code: "http-request-error"});
+    });
+}
+
+try {
+    assistant = new AssistantV2({
+        version: WA_VERSION,
+        authenticator: new IamAuthenticator({
+            apikey: WA_API_KEY
+        }),
+        url: WA_URL
+    });
+} catch (e) {
+    console.error("Error when creating assistant.", e);
+    initError = true;
+}
+
+let app = express();
 app.use(express.json());
 
-// This responds with "Hello World" on the homepage
-app.get('/', function (req, res) {
-    console.log("Got a GET request for the homepage");
-    res.send('Hello GET');
+app.post('/', (req, res) => {
+    console.log("Got a POST request");
+    if (initError) {
+        res.statusCode = 500;
+        res.json({error: "proxy configuration error, check logs."});
+    } else if (!req.body.integration_id) {
+        res.statusCode = 404;
+        res.json({ error: "'integration_id' value not passed in." });
+    } else if (!`${req.body.integration_id}` in ASSISTANT_INFO) {
+        res.statusCode = 500;
+        if (DEBUG) console.log("received integration_id of", req.body.integration_id);
+        console.log("sent an integration_id that don't have in ASSISTANT_INFO.");
+        res.end();
+    } else {
+        handlePost(req, res);
+    }
 });
 
-// This responds a POST request for the homepage
-app.post('/', function (req, res) {
-    console.log("Got a POST request", req.body);
-    res.json(req.body);
-});
+let server = app.listen(8080, function () {
+    let host = server.address().address
+    let port = server.address().port
 
-// This responds a DELETE request for the /del_user page.
-app.delete('/del_user', function (req, res) {
-    console.log("Got a DELETE request for /del_user");
-    res.send('Hello DELETE');
-});
-
-// This responds a GET request for the /list_user page.
-app.get('/list_user', function (req, res) {
-    console.log("Got a GET request for /list_user");
-    res.send('Page Listing');
-});
-
-// This responds a GET request for abcd, abxcd, ab123cd, and so on
-app.get('/ab*cd', function (req, res) {
-    console.log("Got a GET request for /ab*cd");
-    res.send('Page Pattern Match');
-});
-
-var server = app.listen(8080, function () {
-    var host = server.address().address
-    var port = server.address().port
-   
-    console.log("Example app listening at http://%s:%s", host, port)
+    console.log("App listening at http://%s:%s", host, port)
 });

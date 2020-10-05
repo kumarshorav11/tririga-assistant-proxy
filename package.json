@@ -4,7 +4,8 @@
   "description": "Proxy for forwarding requests to Watson Assistant assistant.",
   "main": "assistant-proxy.js",
   "dependencies": {
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "ibm-watson": "^5.7.1"
   },
   "devDependencies": {},
   "scripts": {
