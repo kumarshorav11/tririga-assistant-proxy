@@ -20,8 +20,9 @@ if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
 }
 
 try {
-    assistantInfo = JSON.parse(process.env.ASSISTANT_INFO);
+    assistantInfo = JSON.parse(ASSISTANT_INFO);
 } catch (e) {
+    console.error(e);
     console.error("ASSISTANT_INFO value missing data.  Should be a JSON object.")
     initError = true;
 }
@@ -51,8 +52,8 @@ function getSession(sessionId, assistant, assistantId) {
 }
 
 function handlePost(req, res) {
-    assistantId = req.body.integration_id;
-    return getSession(req.body.session_id, assistant, assistantId).then((result) => {
+    assistantId = assistantInfo[req.body.integration_id].wa_assistant_id;
+    return getSession(req.body.sessionId, assistant, assistantId).then((result) => {
         if (result.error_code) {
             return result;
         }
@@ -106,7 +107,7 @@ app.post('/', (req, res) => {
     } else if (!req.body.integration_id) {
         res.statusCode = 404;
         res.json({ error: "'integration_id' value not passed in." });
-    } else if (!`${req.body.integration_id}` in ASSISTANT_INFO) {
+    } else if (!(`${req.body.integration_id}` in assistantInfo)) {
         res.statusCode = 500;
         if (DEBUG) console.log("received integration_id of", req.body.integration_id);
         console.log("sent an integration_id that don't have in ASSISTANT_INFO.");
