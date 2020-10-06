@@ -8,16 +8,16 @@ const WA_API_KEY = process.env.WA_API_KEY;
 const ASSISTANT_INFO = process.env.ASSISTANT_INFO;
 const DEBUG = process.env.DEBUG;
 
+let initError = false;
+let assistant = undefined;
+let sessionId = "";
+let assistantId = "";
+let assistantInfo = {};
+
 if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
     console.error("Missing environment variable.  WA_URL, WA_VERSION, WA_API_KEY, and ASSISTANT_INFO are required.");
     initError = true;
 }
-
-let assistant = undefined;
-let initError = false;
-let sessionId = "";
-let assistantId = "";
-let assistantInfo = {};
 
 try {
     assistantInfo = JSON.parse(process.env.ASSISTANT_INFO);
