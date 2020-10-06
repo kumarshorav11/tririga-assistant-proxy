@@ -2,11 +2,11 @@ const express = require('express');
 const AssistantV2 = require('ibm-watson/assistant/v2');
 const { IamAuthenticator } = require('ibm-watson/auth');
 
-const WA_URL = process.env("WA_URL");
-const WA_VERSION = process.env("WA_VERSION");
-const WA_API_KEY = process.env("WA_API_KEY");
-const ASSISTANT_INFO = process.env("ASSISTANT_INFO");
-const DEBUG = process.env("DEBUG");
+const WA_URL = process.env.WA_URL;
+const WA_VERSION = process.env.WA_VERSION;
+const WA_API_KEY = process.env.WA_API_KEY;
+const ASSISTANT_INFO = process.env.ASSISTANT_INFO;
+const DEBUG = process.env.DEBUG;
 
 if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
     console.error("Missing environment variable.  WA_URL, WA_VERSION, WA_API_KEY, and ASSISTANT_INFO are required.");
