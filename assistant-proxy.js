@@ -20,7 +20,11 @@ if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
 }
 
 try {
-    assistantInfo = JSON.parse(ASSISTANT_INFO);
+    if (typeof ASSISTANT_INFO === "string") {
+        assistantInfo = JSON.parse(ASSISTANT_INFO);
+    } else {
+        assistantInfo = ASSISTANT_INFO;
+    }
 } catch (e) {
     console.error(e);
     console.error("ASSISTANT_INFO value missing data.  Should be a JSON object.")
