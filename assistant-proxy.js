@@ -26,11 +26,6 @@ try {
     initError = true;
 }
 
-if (!assistantInfo.wa_assistant_id) {
-    console.error("ASSISTANT_INFO value missing data.  Should be a JSON object with 'wa_assistant_id' key.")
-    initError = true;
-}
-
 function getSession(sessionId, assistant, assistantId) {
     return new Promise((resolve, reject) => {
         try {
@@ -56,6 +51,7 @@ function getSession(sessionId, assistant, assistantId) {
 }
 
 function handlePost(req, res) {
+    assistantId = req.body.integration_id;
     return getSession(req.body.session_id, assistant, assistantId).then((result) => {
         if (result.error_code) {
             return result;
