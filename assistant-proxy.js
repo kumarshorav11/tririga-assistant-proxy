@@ -22,12 +22,14 @@ if (!WA_URL || !WA_VERSION || !WA_API_KEY || !ASSISTANT_INFO) {
 try {
     if (typeof ASSISTANT_INFO === "string") {
         assistantInfo = JSON.parse(ASSISTANT_INFO);
-    } else {
+    } else if (typeof ASSISTANT_INFO === "object") {
         assistantInfo = ASSISTANT_INFO;
+    } else {
+        throw new Error();
     }
 } catch (e) {
     console.error(e);
-    console.error("ASSISTANT_INFO value missing data.  Should be a JSON object.")
+    console.error("ASSISTANT_INFO value missing data.  Should be a JSON object or a stringified JSON object.");
     initError = true;
 }
 
@@ -108,7 +110,7 @@ app.post('/', (req, res) => {
     if (initError) {
         res.statusCode = 500;
         res.json({error: "proxy configuration error, check logs."});
-    } else if (!req.body.integration_id) {
+    } else if (!req.body || !req.body.integration_id) {
         res.statusCode = 404;
         res.json({ error: "'integration_id' value not passed in." });
     } else if (!(`${req.body.integration_id}` in assistantInfo)) {
