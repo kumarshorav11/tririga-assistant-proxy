@@ -1,34 +1,60 @@
 #!/bin/bash
 
-# Env Vars:
-# REPOSITORY: name of the image registry/namespace to get the images
-
 # Clean up previous run
 function clean() {
   set +x
   echo Cleaning...
-  ic ce app delete -n hello -f --wto=0 > /dev/null 2>&1 || true
+  ic cr namespace-rm "${ICR_NS}" -f > /dev/null 2>&1 || true
+  ic ce app delete -n assistant-proxy -f --wto=0 > /dev/null 2>&1 || true
+  ic iam api-key-delete s2i-sample -f > /dev/null 2>&1 || true
+  ic ce registry delete -n icr -f > /dev/null 2>&1 || true
+  ic ce buildrun delete -n myrun -f > /dev/null 2>&1 || true
+  ic ce build delete -n mybuild -f > /dev/null 2>&1 || true
+  rm -f out || true
 }
+
+# Define our ICR Namespace env var for later use
+ID=$(ic account show | grep "Account ID:" | sed "s/^.*:  *//")
+ICR_NS=s2i-${ID:0:25}
+IMAGE_NAME=us.icr.io/${ICR_NS}/tririga-assistant-proxy
 
 clean
 [[ "$1" == "clean" ]] && exit 0
 
 set -ex
-export REPOSITORY=${REPOSITORY:-ibmcom}
 
-# Create the app
-ic ce app create -n troy-tririga-assistant-proxy --image ${REPOSITORY}/hello
+# Create an ICR namespace to hold our new image
+ic cr namespace-add $ICR_NS
 
-# Get the URL of the app for later use
-URL=$(ic ce app get -n troy-tririga-assistant-proxy -o jsonpath={.status.url})
+# Create an apikey, put it in a registry secret. Used to push/pull image to ICR
+ic iam api-key-create s2i-sample | \
+  grep "API Key" | sed 's/^.*Key  *//' | \
+  xargs ic ce registry create -n icr -s us.icr.io -u iamapikey -p
 
-# Now call it
-curl -s $URL
+# Define the build of this dir in this github repo
+ic ce build create -n mybuild -i "${IMAGE_NAME}" --rs icr \
+  --source https://github.com/IBM/tririga-assistant-proxy --strategy buildpacks
 
-if ! [[ "$(curl -s $URL)" == "Hello World" ]]; then
-  echo "Unexpected output"
+# Now kick off the build itself
+ic ce buildrun submit -n myrun --build mybuild
+
+# Wait for it to finish
+while true ; do
+  ic ce buildrun get -n myrun > out
+  grep Succeeded out && break
+  grep "exited with" out && cat out && exit 1
+  sleep 10
+done
+
+# Test the image we just built - deploy an app and 'curl' it
+ic ce app create -n assistant-proxy --image "${IMAGE_NAME}" --rs icr
+URL=$(ic ce app get -n assistant-proxy -o jsonpath={.status.url})
+curl -Ls "${URL}" | tee out
+
+if ! grep "I was built"  out > /dev/null ; then
+  echo "Missing expected outout"
   exit 1
 fi
 
-# Clean up
-clean
+# Clean
+#clean
