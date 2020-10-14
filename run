@@ -1,11 +1,17 @@
 #!/bin/bash
 
+source ./config
+
 # Clean up previous run
 function clean() {
   set +x
   echo Cleaning...
   ibmcloud cr namespace-rm "${ICR_NS}" -f > /dev/null 2>&1 || true
   ibmcloud ce app delete -n assistant-proxy -f --wto=0 > /dev/null 2>&1 || true
+  ibmcloud ce secret delete -n wa-api-key -f > /dev/null 2>&1 || true
+  ibmcloud ce configmap delete -n wa-url -f > /dev/null 2>&1 || true
+  ibmcloud ce configmap delete -n wa-version -f > /dev/null 2>&1 || true
+  ibmcloud ce configmap delete -n assistant-info -f > /dev/null 2>&1 || true
   ibmcloud iam api-key-delete s2i-sample -f > /dev/null 2>&1 || true
   ibmcloud ce registry delete -n icr -f > /dev/null 2>&1 || true
   ibmcloud ce buildrun delete -n myrun -f > /dev/null 2>&1 || true
@@ -18,8 +24,7 @@ ID=$(ibmcloud account show | grep "Account ID:" | sed "s/^.*:  *//")
 ICR_NS=s2i-${ID:0:25}
 IMAGE_NAME=us.icr.io/${ICR_NS}/tririga-assistant-proxy
 
-#clean
-[[ "$1" == "clean" ]] && exit 0
+[[ "$1" == "clean" ]] && clean && exit 0
 
 set -ex
 
@@ -45,6 +50,14 @@ while true ; do
   grep "exited with" out && cat out && exit 1
   sleep 10
 done
+
+# Create configmaps to be used as env vars by the app - config maps aren't encrypted at rest
+ibmcloud ce configmap create --name wa-url --from-literal WA_URL=${WA_URL}
+ibmcloud ce configmap create --name wa-version --from-literal WA_VERSION=${WA_VERSION}
+ibmcloud ce configmap create --name assistant-info --from-literal ASSISTANT_INFO="${ASSISTANT_INFO}"
+
+# Create secrets for confidential env vars - secrets are encrypted at rest
+ibmcloud ce secret create --name wa-api-key --from-literal WA_API_KEY=${WA_API_KEY}
 
 # Test the image we just built - deploy an app and 'curl' it
 ibmcloud ce app create -n assistant-proxy --image "${IMAGE_NAME}" --rs icr

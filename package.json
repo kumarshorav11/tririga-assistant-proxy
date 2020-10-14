@@ -11,6 +11,9 @@
     "type": "git",
     "url": "git+https://github.com/IBM/tririga-assistant-proxy.git"
   },
+  "scripts": {
+    "start": "node assistant-proxy.js"
+  },
   "author": "",
   "license": "Apache-2.0",
   "homepage": "https://github.com/IBM/tririga-assistant-proxy#readme"
