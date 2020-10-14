@@ -60,11 +60,14 @@ ibmcloud ce configmap create --name assistant-info --from-literal ASSISTANT_INFO
 ibmcloud ce secret create --name wa-api-key --from-literal WA_API_KEY=${WA_API_KEY}
 
 # Test the image we just built - deploy an app and 'curl' it
-ibmcloud ce app create -n assistant-proxy --image "${IMAGE_NAME}" --rs icr
+ibmcloud ce app create -n assistant-proxy --image "${IMAGE_NAME}" --rs icr \
+  --env-from-configmap wa-url --env-from-configmap wa-version \
+  --env-from-configmap assistant-info --env-from-secret wa-api-key
+
 URL=$(ibmcloud ce app get -n assistant-proxy -o jsonpath={.status.url})
 curl -Ls "${URL}" | tee out
 
-if ! grep "I was built"  out > /dev/null ; then
+if ! grep "Cannot GET"  out > /dev/null ; then
   echo "Missing expected outout"
   exit 1
 fi
