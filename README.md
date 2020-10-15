@@ -60,6 +60,10 @@ The JSON response should contain an appropriate response from your Watson Assist
 
 #### 8. Send the following info to the TRIRIGA Assistant team:
 
-a. string you replaced `SOME_KEY_YOU_GIVE_TA_TEAM` with,
+a. The string you replaced `SOME_KEY_YOU_GIVE_TA_TEAM` with,
 
-b. list of codes you have added as examples for each of your intents.
+b. a list of codes you have added as examples for each of your intents,
+
+c. for each code, provide a short phrase to be used as a button label,
+
+d. the URL to your assistant proxy.
