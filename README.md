@@ -58,12 +58,8 @@ curl --location --request POST 'YOUR_PROXY_URL' \
 
 The JSON response should contain an appropriate response from your Watson Assistant skill.
 
-#### 8. Send the following info to the TRIRIGA Assistant team:
+#### 8. Information needed for the TRIRIGA Assistant team:
 
-a. The string you replaced `SOME_KEY_YOU_GIVE_TA_TEAM` with,
+a. The string you replaced `SOME_KEY_YOU_GIVE_TA_TEAM` with, and 
 
-b. a list of codes you have added as examples for each of your intents,
-
-c. for each code, provide a short phrase to be used as a button label,
-
-d. the URL to your assistant proxy.
+b. the URL to your assistant proxy.
