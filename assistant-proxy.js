@@ -129,3 +129,4 @@ let server = app.listen(8080, function () {
 
     console.log("App listening at http://%s:%s", host, port)
 });
+server.keepAliveTimeout = 1000 * (60 * 3); // 3 mins
