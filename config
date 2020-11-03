@@ -1,0 +1,4 @@
+WA_URL=https://gateway.watsonplatform.net/assistant/api
+WA_VERSION=2019-02-28
+WA_API_KEY=9mILnX8grxBXupze2-kogyIs7SNnROLCbF3B6gm8VIFZ
+ASSISTANT_INFO"{\"cf410385-5e29-4221-bdc5-739696eac8eb\": { \"wa_assistant_id\": \"b1d46d5f-d7a5-45f4-8801-eab385503d56\" } }"
