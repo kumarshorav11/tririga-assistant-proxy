@@ -1,0 +1,87 @@
+image name -us.icr.io/qs-091f9ffae2fb0f53be287bcf5/tririga-assistant-proxy
++ ibmcloud cr namespace-add qs-091f9ffae2fb0f53be287bcf5
+Adding namespace 'qs-091f9ffae2fb0f53be287bcf5' in resource group 'default' for account Quantum Strides LLC in registry us.icr.io...
+
+Successfully added namespace 'qs-091f9ffae2fb0f53be287bcf5'
+
+OK
++ ibmcloud iam api-key-create s2i-sample
++ xargs ibmcloud ce registry create -n icr -s us.icr.io -u iamapikey -p
++ sed 's/^.*Key  *//'
++ grep 'API Key'
+Please preserve the API key! It cannot be retrieved after it's created.
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating image registry access secret 'icr'...
+OK
++ ibmcloud ce build create -n mybuild -i us.icr.io/qs-091f9ffae2fb0f53be287bcf5/tririga-assistant-proxy --rs icr --source https://github.com/IBM/tririga-assistant-proxy --strategy buildpacks
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating build 'mybuild'...
+OK
++ ibmcloud ce buildrun submit -n myrun --build mybuild
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Submitting build run 'myrun'...
+OK
++ true
++ ibmcloud ce buildrun get -n myrun
++ grep Succeeded out
++ grep 'exited with' out
++ sleep 10
++ true
++ ibmcloud ce buildrun get -n myrun
++ grep Succeeded out
++ grep 'exited with' out
++ sleep 10
++ true
++ ibmcloud ce buildrun get -n myrun
++ grep Succeeded out
++ grep 'exited with' out
++ sleep 10
++ true
++ ibmcloud ce buildrun get -n myrun
++ grep Succeeded out
+  Reason:      Succeeded  
++ break
++ ibmcloud ce configmap create --name wa-url --from-literal WA_URL=https://gateway.watsonplatform.net/assistant/api
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating configmap 'wa-url'...
+OK
+Run 'ibmcloud ce configmap get -n wa-url' to see more details.
++ ibmcloud ce configmap create --name wa-version --from-literal WA_VERSION=2019-02-28
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating configmap 'wa-version'...
+OK
+Run 'ibmcloud ce configmap get -n wa-version' to see more details.
++ ibmcloud ce configmap create --name assistant-info --from-literal ASSISTANT_INFO=
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating configmap 'assistant-info'...
+OK
+Run 'ibmcloud ce configmap get -n assistant-info' to see more details.
++ ibmcloud ce secret create --name wa-api-key --from-literal WA_API_KEY=9mILnX8grxBXupze2-kogyIs7SNnROLCbF3B6gm8VIFZ
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating generic secret 'wa-api-key'...
+OK
++ ibmcloud ce app create -n assistant-proxy --image us.icr.io/qs-091f9ffae2fb0f53be287bcf5/tririga-assistant-proxy --rs icr --env-from-configmap wa-url --env-from-configmap wa-version --env-from-configmap assistant-info --env-from-secret wa-api-key
+Project 'proxy-project' and all its contents will be automatically deleted 7 days from now.
+Creating application 'assistant-proxy'...
+Configuration 'assistant-proxy' is waiting for a Revision to become ready.
+Ingress has not yet been reconciled.
+Waiting for load balancer to be ready
+Run 'ibmcloud ce application get -n assistant-proxy' to check the application status.
+OK
+
+https://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud
+++ ibmcloud ce app get -n assistant-proxy -o 'jsonpath={.status.url}'
++ URL=http://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud
++ curl -Ls http://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud
++ tee out
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot GET /</pre>
+</body>
+</html>
++ grep 'Cannot GET' out

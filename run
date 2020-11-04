@@ -21,9 +21,10 @@ function clean() {
 
 # Define our ICR Namespace env var for later use
 ID=$(ibmcloud account show | grep "Account ID:" | sed "s/^.*:  *//")
-ICR_NS=s2i-${ID:0:25}
+#ICR_NS=s2i-${ID:0:25}
+ICR_NS=qs-${ID:0:25}
 IMAGE_NAME=us.icr.io/${ICR_NS}/tririga-assistant-proxy
-
+echo 'image name -'$IMAGE_NAME
 [[ "$1" == "clean" ]] && clean && exit 0
 
 set -ex
