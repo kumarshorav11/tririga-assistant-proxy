@@ -85,3 +85,11 @@ https://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud
 </body>
 </html>
 + grep 'Cannot GET' out
+
+
+CURL-
+==
+curl --location --request POST 'https://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud/' --header 'Content-Type: application/json' --data-raw '{ "sessionId": "", "integration_id": "cf410385-5e29-4221-bdc5-739696eac8eb", "wa_payload": { "input": { "message_type": "text", "text": "health", "options": { "return_context": true, "debug": true }}}}'
+
+
+curl --location --request POST "https://assistant-proxy.1wi2xl86i92.us-south.codeengine.appdomain.cloud/" --header 'Content-Type: application/json' --data-raw '{ "sessionId": "", "integration_id": "cf410385-5e29-4221-bdc5-739696eac8eb", "wa_payload": { "input": { "message_type": "text", "text": "health", "options": { "return_context": true, "debug": true }}}}'
